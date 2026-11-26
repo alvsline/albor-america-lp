@@ -94,9 +94,21 @@ a { color: inherit; }
   z-index: 50;
   height: var(--topo-altura);
   color: var(--neblina);
-  background: linear-gradient(180deg, rgba(0, 61, 76, .55), rgba(0, 61, 76, 0));
-  transition: background-color .4s, opacity 1.4s ease;
+  background: transparent;
+  transition: background-color .5s ease, opacity 1.4s ease;
 }
+
+.topo::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 -70px 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(0, 45, 56, .38) 0%, rgba(0, 45, 56, .16) 55%, rgba(0, 45, 56, 0) 100%);
+  transition: opacity .5s ease;
+  pointer-events: none;
+}
+
+.topo.is-rolado::before { opacity: 0; }
 
 .topo.is-rolado { background-color: rgba(0, 77, 96, .97); }
 
@@ -157,8 +169,7 @@ a { color: inherit; }
   align-items: center;
   gap: 14px;
   color: var(--neblina);
-  text-shadow: 0 0 6px rgba(0, 30, 38, .45);
-  transition: opacity 1.4s ease;
+  transition: opacity 1.4s ease, color .5s ease;
 }
 
 .trilho__texto {
@@ -172,14 +183,26 @@ a { color: inherit; }
   position: relative;
   width: 1px;
   height: 120px;
-  background: rgba(238, 240, 236, .35);
+  background: currentColor;
+  opacity: .9;
   overflow: hidden;
 }
+
+.trilho__linha::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--off-white);
+  opacity: .55;
+}
+
+.trilho--escuro { color: var(--noite); }
+.trilho--escuro .trilho__linha::before { background: var(--off-white); opacity: .7; }
 
 .trilho__progresso {
   position: absolute;
   inset: 0;
-  background: var(--neblina);
+  background: currentColor;
   transform-origin: top;
   transform: scaleY(0);
   will-change: transform;
@@ -379,6 +402,16 @@ html.entrada { overflow: hidden; }
   position: absolute;
   inset: 0;
   background: var(--off-white);
+}
+
+/* as bordas de cima e de baixo do céu de nuvens se fundem com o off-white */
+.nuvens__borda {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(180deg, var(--off-white) 0%, rgba(246, 244, 239, 0) 24%, rgba(246, 244, 239, 0) 72%, var(--off-white) 100%);
+  pointer-events: none;
+  will-change: opacity;
 }
 
 /* a câmera desce das nuvens até a torre; depois segue o zoom lento */
@@ -1016,7 +1049,7 @@ html.entrada { overflow: hidden; }
 @media (max-width: 900px) {
   :root { --topo-altura: 64px; }
 
-  .topo { background: rgba(0, 61, 76, .94); }
+  .topo.is-rolado { background-color: rgba(0, 61, 76, .97); }
   .topo__faixa { gap: 14px; }
   .topo__marca { font-size: 20px; }
   .topo__vece { padding-left: 14px; }

@@ -66,6 +66,8 @@ function criarNuvens(palco) {
   const base = document.createElement("div");
   base.className = "nuvens__base";
   palco.appendChild(base);
+  const borda = document.createElement("div");
+  borda.className = "nuvens__borda";
   const nuvens = [];
   const linhas = 4, colunas = 4;
   for (let l = 0; l < linhas; l++) for (let c = 0; c < colunas; c++) {
@@ -82,6 +84,7 @@ function criarNuvens(palco) {
       espelho: Math.random() < 0.5 ? -1 : 1,
     });
   }
+  palco.appendChild(borda); // por cima das nuvens
   palco.style.background = "transparent";
 
   let W = 0, H = 0;
@@ -109,6 +112,7 @@ function criarNuvens(palco) {
     ultimo = p;
     const abre = suave(0.06, 0.78, p);
     base.style.opacity = (1 - suave(0, 0.3, p)).toFixed(3);
+    borda.style.opacity = (1 - suave(0.1, 0.6, p)).toFixed(3);
     const alcance = Math.max(W, H) * 1.05;
     const anda0 = Math.pow(abre, 1.6) * alcance;
     const escala = 1 + abre * 0.9;
@@ -300,6 +304,9 @@ function medir() {
   M.contato = { top: topoDe(fotoContato), h: fotoContato.offsetHeight };
   M.contatoLargura = M.vw > 700 ? Math.min(1065, M.vw * 0.74) : M.vw - 32;
   M.fotos = fotosEmMovimento.map((img) => ({ img, top: topoDe(img.parentElement), h: img.parentElement.offsetHeight }));
+  // faixas claras da página: dos diferenciais até o fim do traçado
+  M.claroDe = topoDe(diferenciais.querySelector(".diferenciais__miolo"));
+  M.claroAte = M.tracado.top + M.tracado.h + M.vh * 0.35;
   ultimoY = -1;
 }
 
@@ -309,6 +316,8 @@ const perto = (m, y) => y > m.top - M.vh * 1.2 && y < m.top + m.h + M.vh * 0.2;
 /* ---------- o quadro ---------- */
 let ultimoY = -1;
 let rolado = null;
+let trilhoEscuro = null;
+const trilhoCaixa = document.querySelector(".trilho");
 let abrirNuvensDoCeu = null;
 
 function quadro() {
@@ -321,6 +330,9 @@ function quadro() {
   const r = y > 40;
   if (r !== rolado) { topo.classList.toggle("is-rolado", r); rolado = r; }
   trilho.style.transform = `scaleY(${(y / M.total).toFixed(4)})`;
+  const pontoDoTrilho = y + M.vh - 100; // altura do trilho na tela
+  const escuro = pontoDoTrilho > M.claroDe && pontoDoTrilho < M.claroAte;
+  if (escuro !== trilhoEscuro) { trilhoCaixa.classList.toggle("trilho--escuro", escuro); trilhoEscuro = escuro; }
 
   if (menosMovimento) return;
 
