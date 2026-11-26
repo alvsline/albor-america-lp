@@ -72,7 +72,7 @@
         </picture>
       </div>
       <div class="abertura__veu" aria-hidden="true"></div>
-      <canvas class="abertura__nuvens" id="nuvens" aria-hidden="true"></canvas>
+      <div class="abertura__nuvens" id="nuvens" aria-hidden="true"></div>
 
       <div class="abertura__conteudo" id="abertura-conteudo">
         <p class="abertura__lugar">Jardim América, São José dos Campos</p>
@@ -178,10 +178,10 @@
       <div class="tracado" id="tracado">
         <div class="tracado__palco">
           <p class="tracado__titulo">No Jardim América, Zona Sul de São José dos Campos</p>
-          <svg class="tracado__desenho" viewBox="0 0 1440 560" role="img"
+          <svg class="tracado__desenho" viewBox="0 60 1440 480" role="img"
                aria-label="Desenho de uma linha que passa pela Linha Verde, pela Avenida Bacabal, chega à torre do Albor América e segue até o Shopping Jardim Oriente, a 4 minutos a pé, e ao plantão de vendas na Rua Andorra.">
             <!-- o caminho -->
-            <path class="traco traco--rota" pathLength="1" d="M30 505 C 110 478, 160 452, 200 446 S 330 506, 430 486 S 600 476, 720 482 S 900 440, 1010 458 S 1160 430, 1240 442 S 1360 474, 1415 458"/>
+            <path class="traco traco--rota" pathLength="1" d="M30 505 C 110 478, 160 452, 200 446 S 330 506, 430 486 C 490 474, 540 482, 580 482 L 860 482 C 920 482, 962 455, 1010 458 S 1160 430, 1240 442 S 1360 474, 1415 458"/>
             <!-- os pontos -->
             <g class="ponto" data-em="0.12"><circle cx="200" cy="446" r="5"/><text x="200" y="412" class="ponto__nome">Linha Verde</text></g>
             <g class="ponto" data-em="0.26"><circle cx="430" cy="486" r="5"/><text x="430" y="452" class="ponto__nome">Avenida Bacabal</text></g>
@@ -201,7 +201,7 @@
               <path class="traco traco--fino" data-de="0.44" data-ate="0.54" pathLength="1" d="M606 418 C 600 404, 614 396, 618 406 C 624 396, 636 404, 628 418 M 818 418 C 812 404, 826 396, 830 406 C 836 396, 848 404, 840 418"/>
             </g>
             <g class="ponto ponto--torre" data-em="0.95"><text x="800" y="104" class="ponto__nome">Rooftop</text><text x="800" y="128" class="ponto__info">24º pavimento</text></g>
-            <g class="ponto ponto--torre" data-em="0.5"><text x="860" y="472" class="ponto__info">Térreo</text></g>
+            <g class="ponto ponto--torre" data-em="0.5"><text x="870" y="512" class="ponto__info">Térreo</text></g>
           </svg>
           <ul class="tracado__lista" aria-hidden="true">
             <li><strong>Linha Verde</strong></li>
@@ -246,71 +246,76 @@
 
     <!-- 5. Contato -->
     <section class="contato" id="contato" aria-labelledby="contato-titulo">
-      <div class="contato__grade">
-        <figure class="contato__imagem revela">
-          <img src="img/albor_contato_tipo4_01.jpg" width="758" height="947" loading="lazy"
-               alt="Living do apartamento tipo 4, com cozinha integrada, marcenaria de madeira e o pôr do sol entrando pela varanda.">
-          <figcaption>Apartamento tipo 4</figcaption>
-        </figure>
+      <!-- a foto entra larga e se recolhe até virar uma moldura, como uma janela que se fecha -->
+      <div class="contato__foto" id="contato-foto">
+        <img src="img/albor_contato_tipo4_01.jpg" width="1200" height="750" loading="lazy"
+             alt="Living do apartamento tipo 4, com cozinha integrada, marcenaria de madeira e o pôr do sol entrando pela varanda.">
+        <p class="contato__legenda">Apartamento tipo 4</p>
+      </div>
 
-        <div class="contato__painel">
-          <h2 id="contato-titulo">Fale com a equipe do Albor América</h2>
-          <p class="contato__apoio">Deixe seu contato. A equipe retorna para tirar suas dúvidas e combinar uma visita ao plantão de vendas.</p>
+      <div class="contato__miolo">
+        <img class="contato__selo" src="img/vece_logo_01.png" width="204" height="231" alt="Vece Urbanismo">
+        <h2 id="contato-titulo" class="contato__titulo">Fale com a equipe do Albor América</h2>
+        <p class="contato__apoio">Deixe seu contato. A equipe retorna para tirar suas dúvidas e combinar uma visita ao plantão de vendas.</p>
 
-          <form class="formulario" id="formulario" novalidate>
-            <div class="campo">
-              <label for="nome">Nome</label>
-              <input id="nome" name="nome" type="text" autocomplete="name" required>
-              <p class="campo__erro" id="nome-erro"></p>
-            </div>
-            <div class="campo-dupla">
-              <div class="campo">
-                <label for="telefone">Telefone com DDD</label>
-                <input id="telefone" name="telefone" type="tel" inputmode="numeric" autocomplete="tel-national" placeholder="(12) 90000-0000" required>
-                <p class="campo__erro" id="telefone-erro"></p>
-              </div>
-              <div class="campo">
-                <label for="email">E-mail</label>
-                <input id="email" name="email" type="email" autocomplete="email" required>
-                <p class="campo__erro" id="email-erro"></p>
-              </div>
-            </div>
-            <div class="campo">
-              <label for="apartamento">Qual apartamento te interessa?</label>
-              <select id="apartamento" name="apartamento">
-                <option>Tipo 1</option>
-                <option>Tipo 1 ampliado</option>
-                <option>Tipo 4</option>
-                <option selected>Ainda não sei</option>
-              </select>
-            </div>
-            <div class="campo campo--aceite">
-              <input id="aceite" name="aceite" type="checkbox" required>
-              <label for="aceite">Aceito receber contato da equipe do Albor América por telefone, WhatsApp ou e-mail.</label>
-              <p class="campo__erro" id="aceite-erro"></p>
-            </div>
-
-            <div class="formulario__botoes">
-              <button class="botao botao--albor botao--grande" type="submit">Quero saber mais</button>
-              <a class="botao botao--contorno botao--grande" id="whatsapp" href="#" target="_blank" rel="noopener">Falar no WhatsApp</a>
-            </div>
-          </form>
-
-          <div class="formulario__ok" id="formulario-ok" hidden tabindex="-1">
-            <h3>Recebemos o seu contato</h3>
-            <p>Obrigado. A equipe do Albor América vai falar com você em breve.</p>
+        <form class="formulario" id="formulario" novalidate>
+          <div class="campo">
+            <label for="nome">Nome</label>
+            <input id="nome" name="nome" type="text" autocomplete="name" required>
+            <p class="campo__erro" id="nome-erro"></p>
           </div>
+          <div class="campo-dupla">
+            <div class="campo">
+              <label for="telefone">Telefone com DDD</label>
+              <input id="telefone" name="telefone" type="tel" inputmode="numeric" autocomplete="tel-national" placeholder="(12) 90000-0000" required>
+              <p class="campo__erro" id="telefone-erro"></p>
+            </div>
+            <div class="campo">
+              <label for="email">E-mail</label>
+              <input id="email" name="email" type="email" autocomplete="email" required>
+              <p class="campo__erro" id="email-erro"></p>
+            </div>
+          </div>
+          <div class="campo">
+            <label for="apartamento">Qual apartamento te interessa?</label>
+            <select id="apartamento" name="apartamento">
+              <option>Tipo 1</option>
+              <option>Tipo 1 ampliado</option>
+              <option>Tipo 4</option>
+              <option selected>Ainda não sei</option>
+            </select>
+          </div>
+          <div class="campo campo--aceite">
+            <input id="aceite" name="aceite" type="checkbox" required>
+            <label for="aceite">Aceito receber contato da equipe do Albor América por telefone, WhatsApp ou e-mail.</label>
+            <p class="campo__erro" id="aceite-erro"></p>
+          </div>
+
+          <div class="formulario__botoes">
+            <button class="botao botao--albor botao--grande" type="submit">Quero saber mais</button>
+            <a class="botao botao--claro botao--grande" id="whatsapp" href="#" target="_blank" rel="noopener">Falar no WhatsApp</a>
+          </div>
+        </form>
+
+        <div class="formulario__ok" id="formulario-ok" hidden tabindex="-1">
+          <h3>Recebemos o seu contato</h3>
+          <p>Obrigado. A equipe do Albor América vai falar com você em breve.</p>
+        </div>
+
+        <div class="contato__plantao">
+          <p class="contato__rotulo">Plantão de vendas</p>
+          <p>Rua Andorra, 452, ao lado do Varandas Oriente<br>Jardim América, São José dos Campos (SP)</p>
         </div>
       </div>
 
-      <div class="contato__rodape">
-        <img class="contato__vece" src="img/vece_logo_01.png" width="204" height="231" alt="Vece Urbanismo">
-        <p class="contato__legal">
-          Albor América, da Vece Urbanismo. Plantão de vendas: Rua Andorra, 452, ao lado do Varandas Oriente, São José dos Campos (SP).
-          Arquitetura de Ilda Menini e interiores de Natalia Buscardi. Imagens meramente ilustrativas.
-          Registro da incorporação: R.01 da matrícula 00.000, 0º Oficial de Registro de Imóveis.
-        </p>
-      </div>
+      <footer class="rodape">
+        <div class="rodape__marca">
+          <p><strong>Albor América</strong>, da Vece Urbanismo</p>
+          <p>Arquitetura de Ilda Menini e interiores de Natalia Buscardi</p>
+        </div>
+        <a class="rodape__topo" href="#abertura">Voltar ao topo</a>
+        <p class="rodape__legal">Imagens meramente ilustrativas. Registro da incorporação: R.01 da matrícula 00.000, 0º Oficial de Registro de Imóveis.</p>
+      </footer>
     </section>
 
   </main>

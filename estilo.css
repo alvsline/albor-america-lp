@@ -374,7 +374,15 @@ html.entrada { overflow: hidden; }
 .entrada:not(.nuvens) .topo,
 .entrada:not(.nuvens) .abertura .botao,
 .entrada:not(.nuvens) .elevacao,
-.entrada .trilho { opacity: 0; }
+.entrada .trilho { opacity: 0 !important; }
+
+.entrada:not(.nuvens) .diferenciais { visibility: hidden; }
+
+.nuvens__base {
+  position: absolute;
+  inset: 0;
+  background: var(--off-white);
+}
 
 /* a câmera desce das nuvens até a torre; depois segue o zoom lento */
 .entrada.nuvens .abertura__imagem {
@@ -570,9 +578,9 @@ html.entrada { overflow: hidden; }
 .galeria { position: relative; }
 
 .galeria__corpo {
-  background: linear-gradient(180deg, var(--verde) 0, var(--verde) calc(100% - var(--transicao)), var(--off-white) 100%);
+  background: var(--verde);
   color: var(--neblina);
-  padding: 24px var(--margem) calc(var(--transicao) + 24px);
+  padding: 24px var(--margem) 140px;
 }
 
 .galeria__dica,
@@ -828,156 +836,148 @@ html.entrada { overflow: hidden; }
 @keyframes aparece { from { opacity: 0; } to { opacity: 1; } }
 @keyframes aproxima { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: scale(1); } }
 
-/* ---------- 5. contato ---------- */
+/* ---------- 5. contato: a foto se recolhe e o fechamento acontece no verde ---------- */
 
 .contato {
-  background: var(--off-white);
-  padding: 120px var(--margem) 56px;
-}
-
-.contato__grade {
-  max-width: var(--largura);
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: 5fr 7fr;
-  background: var(--branco);
-  border: 1px solid rgba(14, 42, 44, .1);
-  border-radius: 6px;
-  overflow: hidden;
-}
-
-.contato__imagem {
   position: relative;
-  margin: 0;
-  min-height: 100%;
-  overflow: hidden;
+  background: var(--verde);
+  color: var(--neblina);
+  padding: 0 0 48px;
 }
 
-.contato__imagem img { width: 100%; height: 114%; margin-top: -7%; object-fit: cover; }
+.contato__foto {
+  position: relative;
+  height: 78vh;
+  min-height: 420px;
+  overflow: hidden;
+  clip-path: inset(0 var(--lado, 0px) 0 var(--lado, 0px) round var(--canto, 0px));
+  will-change: clip-path;
+}
 
-.contato__imagem figcaption {
+.contato__foto img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  scale: var(--zoom-contato, 1);
+}
+
+.contato__legenda {
   position: absolute;
-  left: 24px;
+  left: calc(var(--lado, 0px) + 24px);
   bottom: 20px;
   font-size: 14px;
   color: var(--neblina);
   text-shadow: 0 1px 8px rgba(0, 0, 0, .5);
 }
 
-.contato__painel { padding: 64px 64px 56px; }
-.contato h2 { font-size: clamp(30px, 3.2vw, 46px); max-width: 14ch; }
+.contato__miolo {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 120px var(--margem) 0;
+  text-align: center;
+}
+
+.contato__selo { width: auto; height: 84px; margin: 0 auto 36px; }
+
+.contato__titulo {
+  font-size: clamp(40px, 6vw, 88px);
+  line-height: 1.02;
+  letter-spacing: -.01em;
+}
 
 .contato__apoio {
-  margin: 18px 0 36px;
   max-width: 34em;
-  color: rgba(14, 42, 44, .82);
+  margin: 24px auto 56px;
+  font-size: 19px;
+  color: rgba(238, 240, 236, .82);
 }
 
-.formulario { display: grid; gap: 20px; }
+.formulario { display: grid; gap: 20px; text-align: left; }
 
-.campo-dupla {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-}
-
+.campo-dupla { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 .campo { display: grid; gap: 6px; }
-.campo label { font-size: 15px; font-weight: 500; }
+.campo label { font-size: 15px; font-weight: 500; color: var(--neblina); }
 
 .campo input[type="text"],
 .campo input[type="tel"],
 .campo input[type="email"],
 .campo select {
   width: 100%;
-  height: 52px;
+  height: 54px;
   padding: 0 16px;
-  border: 1px solid rgba(14, 42, 44, .25);
+  border: 1px solid rgba(238, 240, 236, .28);
   border-radius: 4px;
-  background: var(--branco);
-  color: var(--noite);
+  background: rgba(238, 240, 236, .07);
+  color: var(--neblina);
   font: 400 17px var(--texto);
+  transition: border-color .2s, background-color .2s;
 }
+
+.campo input::placeholder { color: rgba(238, 240, 236, .45); }
 
 .campo select {
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6' fill='none' stroke='%230E2A2C' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6' fill='none' stroke='%23EEF0EC' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 14px center;
   background-size: 20px;
   padding-right: 44px;
 }
 
+.campo select option { color: var(--noite); }
+
 .campo input:focus,
 .campo select:focus {
   outline: none;
-  border-color: var(--petroleo);
-  box-shadow: 0 0 0 3px rgba(31, 90, 85, .2);
+  border-color: var(--albor);
+  background-color: rgba(238, 240, 236, .12);
 }
 
-.campo input[aria-invalid="true"] { border-color: var(--erro); }
-.campo__erro { font-size: 14px; color: var(--erro); }
+.campo input[aria-invalid="true"] { border-color: #F2A495; }
+.campo__erro { font-size: 14px; color: #F7B9AC; }
 .campo__erro:empty { display: none; }
 
-.campo--aceite {
-  grid-template-columns: auto 1fr;
-  align-items: start;
-  column-gap: 12px;
-}
-
-.campo--aceite input {
-  width: 20px;
-  height: 20px;
-  margin: 2px 0 0;
-  accent-color: var(--petroleo);
-}
-
-.campo--aceite label { font-weight: 400; font-size: 15px; color: rgba(14, 42, 44, .82); }
+.campo--aceite { grid-template-columns: auto 1fr; align-items: start; column-gap: 12px; }
+.campo--aceite input { width: 20px; height: 20px; margin: 2px 0 0; accent-color: var(--albor); }
+.campo--aceite label { font-weight: 400; font-size: 15px; color: rgba(238, 240, 236, .82); }
 .campo--aceite .campo__erro { grid-column: 2; }
 
-.formulario__botoes {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 8px;
-}
+.formulario__botoes { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 12px; }
+
+.botao--claro { border-color: rgba(238, 240, 236, .45); color: var(--neblina); background: transparent; }
+.botao--claro:hover { border-color: var(--neblina); background: rgba(238, 240, 236, .08); }
 
 .formulario__ok {
-  padding: 32px;
+  padding: 36px;
+  border: 1px solid rgba(238, 240, 236, .25);
   border-radius: 4px;
-  background: var(--off-white);
-  border-left: 3px solid var(--albor);
 }
 
 .formulario__ok:focus { outline: none; }
-.formulario__ok h3 { font-size: 30px; margin-bottom: 8px; }
+.formulario__ok h3 { font-size: 34px; margin-bottom: 8px; }
 
-.diferenciais :focus-visible,
-.contato :focus-visible { outline-color: var(--noite); }
+.contato :focus-visible { outline-color: var(--albor); }
 
-.contato__rodape {
+.contato__plantao { margin-top: 96px; font-size: 15px; line-height: 1.6; color: rgba(238, 240, 236, .85); }
+.contato__rotulo { font-size: 13px; letter-spacing: .06em; color: var(--albor); margin-bottom: 6px; }
+
+.rodape {
   max-width: var(--largura);
-  margin: 56px auto 0;
-  padding-top: 32px;
-  border-top: 1px solid rgba(14, 42, 44, .12);
-  display: flex;
-  align-items: center;
-  gap: 32px;
-}
-
-/* a logo é branca: aqui ela vira o tom escuro da página */
-.contato__vece {
-  height: 64px;
-  width: auto;
-  flex: none;
-  filter: brightness(0);
-  opacity: .78;
-}
-
-.contato__legal {
+  margin: 120px auto 0;
+  padding: 28px var(--margem) 0;
+  border-top: 1px solid rgba(238, 240, 236, .16);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 18px 32px;
   font-size: 13px;
   line-height: 1.6;
-  color: rgba(14, 42, 44, .8);
+  color: rgba(238, 240, 236, .7);
 }
+
+.rodape strong { color: var(--neblina); font-weight: 600; }
+.rodape__topo { align-self: start; color: var(--neblina); text-decoration: none; border-bottom: 1px solid rgba(238, 240, 236, .4); }
+.rodape__topo:hover { border-bottom-color: var(--albor); }
+.rodape__legal { grid-column: 1 / -1; font-size: 12px; color: rgba(238, 240, 236, .55); }
 
 /* ================= tablet ================= */
 
@@ -1151,4 +1151,17 @@ html.entrada { overflow: hidden; }
   .ceu__nuvens { display: none; }
   .ceu__texto { opacity: 1; transform: none; }
   .ceu__imagem { transform: none; }
+}
+
+/* ---------- contato: tablet e celular ---------- */
+@media (max-width: 700px) {
+  .contato { padding: 0 0 36px; }
+  .contato__foto { height: 56vh; min-height: 320px; }
+  .contato__miolo { padding-top: 72px; }
+  .contato__selo { height: 64px; margin-bottom: 26px; }
+  .contato__apoio { font-size: 17px; margin-bottom: 40px; }
+  .campo-dupla { grid-template-columns: 1fr; }
+  .formulario__botoes .botao { width: 100%; }
+  .contato__plantao { margin-top: 64px; }
+  .rodape { grid-template-columns: 1fr; margin-top: 72px; }
 }
