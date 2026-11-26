@@ -98,11 +98,7 @@ a { color: inherit; }
   transition: background-color .4s, opacity 1.4s ease;
 }
 
-.topo.is-rolado {
-  background-color: rgba(0, 77, 96, .96);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
+.topo.is-rolado { background-color: rgba(0, 77, 96, .97); }
 
 .topo__faixa {
   height: 100%;
@@ -161,7 +157,7 @@ a { color: inherit; }
   align-items: center;
   gap: 14px;
   color: var(--neblina);
-  mix-blend-mode: difference;
+  text-shadow: 0 0 6px rgba(0, 30, 38, .45);
   transition: opacity 1.4s ease;
 }
 
@@ -185,7 +181,8 @@ a { color: inherit; }
   inset: 0;
   background: var(--neblina);
   transform-origin: top;
-  transform: scaleY(var(--progresso, 0));
+  transform: scaleY(0);
+  will-change: transform;
 }
 
 /* ---------- 2. abertura ---------- */
@@ -432,10 +429,25 @@ html.entrada { overflow: hidden; }
 .arco-ativo .diferenciais {
   margin-top: calc(-1 * var(--arco-sobe));
   padding-top: calc(var(--arco-sobe) * .55 + 96px);
-  clip-path: circle(var(--raio, 150%) at 50% var(--cy, 50%));
+  /* acima do centro do círculo só o domo pinta; dali para baixo é off-white */
+  background: linear-gradient(180deg, transparent var(--corte, 0px), var(--off-white) var(--corte, 0px));
 }
 
-.arco-ativo .diferenciais.is-aberta { clip-path: none; }
+.diferenciais__domo {
+  display: none;
+  position: absolute;
+  left: 50%;
+  top: 0;
+  border-radius: 50%;
+  background: var(--off-white);
+  transform-origin: 50% 0;
+  will-change: transform;
+  pointer-events: none;
+}
+
+.arco-ativo .diferenciais__domo { display: block; }
+.diferenciais__miolo { position: relative; z-index: 1; will-change: opacity; }
+.arco { z-index: 1; will-change: transform, opacity; }
 
 .arco {
   display: none;
@@ -444,7 +456,7 @@ html.entrada { overflow: hidden; }
   top: 0;
   width: 1000px;
   height: 220px;
-  transform: translateX(-50%);
+  transform: translate3d(-50%, 0, 0);
   pointer-events: none;
   overflow: visible;
 }
@@ -637,7 +649,7 @@ html.entrada { overflow: hidden; }
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-dasharray: 1;
-  stroke-dashoffset: var(--falta, 1);
+  stroke-dashoffset: 1;
 }
 
 .traco--rota { stroke-width: 3.4; }
@@ -694,7 +706,7 @@ html.entrada { overflow: hidden; }
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transform: scale(var(--zoom, 1.3));
+  transform: scale(1.3);
   will-change: transform;
 }
 
@@ -717,6 +729,7 @@ html.entrada { overflow: hidden; }
   top: 0;
   background-size: 100% 100%;
   will-change: transform, opacity;
+  backface-visibility: hidden;
 }
 
 .ceu__texto {
@@ -725,8 +738,9 @@ html.entrada { overflow: hidden; }
   z-index: 3;
   text-align: center;
   color: var(--neblina);
-  opacity: var(--texto, 0);
-  transform: translateY(calc((1 - var(--texto, 0)) * 30px));
+  opacity: 0;
+  transform: translate3d(0, 30px, 0);
+  will-change: transform, opacity;
   text-shadow: 0 2px 24px rgba(0, 40, 50, .5);
 }
 
@@ -850,20 +864,23 @@ html.entrada { overflow: hidden; }
   height: 78vh;
   min-height: 420px;
   overflow: hidden;
-  clip-path: inset(0 var(--lado, 0px) 0 var(--lado, 0px) round var(--canto, 0px));
-  will-change: clip-path;
+  transform-origin: 50% 50%;
+  will-change: transform;
 }
 
 .contato__foto img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  scale: var(--zoom-contato, 1);
+  transform-origin: 50% 50%;
+  transform: scale(1.18);
+  will-change: transform;
 }
 
 .contato__legenda {
   position: absolute;
-  left: calc(var(--lado, 0px) + 24px);
+  left: 24px;
+  transform-origin: 0 50%;
   bottom: 20px;
   font-size: 14px;
   color: var(--neblina);
@@ -880,8 +897,8 @@ html.entrada { overflow: hidden; }
 .contato__selo { width: auto; height: 84px; margin: 0 auto 36px; }
 
 .contato__titulo {
-  font-size: clamp(40px, 6vw, 88px);
-  line-height: 1.02;
+  font-size: clamp(30px, 3.4vw, 50px);
+  line-height: 1.1;
   letter-spacing: -.01em;
 }
 
@@ -999,7 +1016,7 @@ html.entrada { overflow: hidden; }
 @media (max-width: 900px) {
   :root { --topo-altura: 64px; }
 
-  .topo { background: rgba(0, 61, 76, .82); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+  .topo { background: rgba(0, 61, 76, .94); }
   .topo__faixa { gap: 14px; }
   .topo__marca { font-size: 20px; }
   .topo__vece { padding-left: 14px; }

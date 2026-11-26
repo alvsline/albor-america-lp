@@ -44,9 +44,10 @@ function texturaDeNuvem(semente) {
     const a = limitar(dens / 0.3);
     const sombra = limitar((y / h - 0.3) * 1.1) * 0.22;
     const i = (y * w + x) * 4;
-    img.data[i] = 255 - sombra * 190;
-    img.data[i + 1] = 255 - sombra * 140;
-    img.data[i + 2] = 255 - sombra * 100;
+    // o claro da nuvem é o off-white da página, para a emenda com as partes claras sumir
+    img.data[i] = 247 - sombra * 180;
+    img.data[i + 1] = 245 - sombra * 132;
+    img.data[i + 2] = 240 - sombra * 92;
     img.data[i + 3] = a * a * (3 - 2 * a) * 255;
   }
   g.putImageData(img, 0, 0);
@@ -58,7 +59,8 @@ function texturaDeNuvem(semente) {
   return grande.toDataURL("image/png");
 }
 
-// monta um céu de nuvens dentro de "palco" e devolve atualizar(p): 0 fechado, 1 aberto
+// monta um céu de nuvens dentro de "palco" e devolve atualizar(p): 0 fechado, 1 aberto.
+// Por quadro só mudam transform e opacity, que a placa de vídeo resolve sem redesenhar a página.
 function criarNuvens(palco) {
   if (!texturasDeNuvem) texturasDeNuvem = [1, 2, 3, 4, 5].map(texturaDeNuvem);
   const base = document.createElement("div");
@@ -67,38 +69,54 @@ function criarNuvens(palco) {
   const nuvens = [];
   const linhas = 4, colunas = 4;
   for (let l = 0; l < linhas; l++) for (let c = 0; c < colunas; c++) {
-    for (let k = 0; k < 2; k++) {
-      const el = document.createElement("div");
-      el.className = "nuvem";
-      el.style.backgroundImage = `url(${texturasDeNuvem[(l * colunas + c + k) % texturasDeNuvem.length]})`;
-      palco.appendChild(el);
-      nuvens.push({
-        el,
-        x: (c + 0.5) / colunas + (Math.random() - 0.5) * 0.18,
-        y: (l + 0.5) / linhas + (Math.random() - 0.5) * 0.2,
-        tamanho: 0.62 + Math.random() * 0.4,
-        velocidade: 0.75 + Math.random() * 0.6,
-        espelho: Math.random() < 0.5 ? -1 : 1,
-      });
-    }
+    const el = document.createElement("div");
+    el.className = "nuvem";
+    el.style.backgroundImage = `url(${texturasDeNuvem[(l * colunas + c) % texturasDeNuvem.length]})`;
+    palco.appendChild(el);
+    nuvens.push({
+      el,
+      x: (c + 0.5) / colunas + (Math.random() - 0.5) * 0.16,
+      y: (l + 0.5) / linhas + (Math.random() - 0.5) * 0.18,
+      tamanho: 0.8 + Math.random() * 0.4,
+      velocidade: 0.75 + Math.random() * 0.6,
+      espelho: Math.random() < 0.5 ? -1 : 1,
+    });
   }
   palco.style.background = "transparent";
+
+  let W = 0, H = 0;
+  function medir() {
+    W = palco.clientWidth || window.innerWidth;
+    H = palco.clientHeight || window.innerHeight;
+    for (const n of nuvens) {
+      n.w = Math.max(W, 700) * n.tamanho;
+      n.h = n.w / 2;
+      n.el.style.width = `${n.w}px`;
+      n.el.style.height = `${n.h}px`;
+      const dx = n.x - 0.5, dy = (n.y - 0.48) * 0.8;
+      const d = Math.hypot(dx, dy) || 0.01;
+      n.dirX = dx / d; n.dirY = dy / d;
+      n.baseX = n.x * W - n.w / 2;
+      n.baseY = n.y * H - n.h / 2;
+    }
+  }
+  medir();
+  window.addEventListener("resize", medir);
+
+  let ultimo = -1;
   return function atualizar(p) {
-    const W = palco.clientWidth || window.innerWidth, H = palco.clientHeight || window.innerHeight;
+    if (Math.abs(p - ultimo) < 0.0008) return;
+    ultimo = p;
     const abre = suave(0.06, 0.78, p);
     base.style.opacity = (1 - suave(0, 0.3, p)).toFixed(3);
     const alcance = Math.max(W, H) * 1.05;
+    const anda0 = Math.pow(abre, 1.6) * alcance;
+    const escala = 1 + abre * 0.9;
+    const alfa = (1 - Math.pow(abre, 2.2)).toFixed(3);
     for (const n of nuvens) {
-      const w = Math.max(W, 700) * n.tamanho, h = w / 2;
-      const cx = n.x * W, cy = n.y * H;
-      const dx = n.x - 0.5, dy = (n.y - 0.48) * 0.8;
-      const d = Math.hypot(dx, dy) || 0.01;
-      const anda = Math.pow(abre, 1.6) * alcance * n.velocidade;
-      const escala = 1 + abre * 0.9;
-      n.el.style.width = `${w}px`;
-      n.el.style.height = `${h}px`;
-      n.el.style.transform = `translate3d(${cx - w / 2 + (dx / d) * anda}px, ${cy - h / 2 + (dy / d) * anda - abre * 60}px, 0) scale(${escala * n.espelho}, ${escala})`;
-      n.el.style.opacity = (1 - Math.pow(abre, 2.2)).toFixed(3);
+      const anda = anda0 * n.velocidade;
+      n.el.style.transform = `translate3d(${(n.baseX + n.dirX * anda).toFixed(1)}px, ${(n.baseY + n.dirY * anda - abre * 60).toFixed(1)}px, 0) scale(${(escala * n.espelho).toFixed(3)}, ${escala.toFixed(3)})`;
+      n.el.style.opacity = alfa;
     }
   };
 }
@@ -203,89 +221,38 @@ function criarNuvens(palco) {
 })();
 
 /* =========================================================
-   Rolagem: foto da abertura em paralaxe, texto saindo,
-   o arco que sobe e cresce, e o trilho de progresso.
+   Rolagem: um ciclo só por quadro. As posições são medidas uma
+   vez (e de novo quando a página muda de tamanho); a cada quadro
+   só se escrevem transform e opacity, que não redesenham a página.
    ========================================================= */
 const topo = document.getElementById("topo");
 const foto = document.getElementById("abertura-foto");
 const conteudo = document.getElementById("abertura-conteudo");
 const elevacao = document.getElementById("elevacao");
 const diferenciais = document.getElementById("diferenciais");
+const miolo = diferenciais.querySelector(".diferenciais__miolo");
 const arco = document.getElementById("arco");
 const arcoTexto = arco.querySelector("text");
 const trilho = document.getElementById("trilho-progresso");
-
-if (!menosMovimento && "CSS" in window && CSS.supports("clip-path", "circle(10px at 50% 50%)")) {
-  raiz.classList.add("arco-ativo");
-}
-
-let pedido = false;
-function aoRolar() {
-  pedido = false;
-  const y = window.scrollY;
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
-
-  topo.classList.toggle("is-rolado", y > 40);
-
-  const total = document.documentElement.scrollHeight - vh;
-  trilho.style.setProperty("--progresso", total > 0 ? (y / total).toFixed(4) : 0);
-
-  if (menosMovimento) return;
-
-  // a foto anda mais devagar que a página; o texto sobe e se apaga
-  if (y < vh * 1.2) {
-    foto.style.transform = `translate3d(0, ${y * 0.35}px, 0)`;
-    const saida = Math.min(y / (vh * 0.6), 1);
-    conteudo.style.transform = `translate3d(0, ${-y * 0.18}px, 0)`;
-    conteudo.style.opacity = (1 - saida).toFixed(3);
-    elevacao.style.opacity = (1 - saida).toFixed(3);
-  }
-
-  // o arco: nasce escondido na base da foto, sobe e cresce até cobrir tudo
-  if (raiz.classList.contains("arco-ativo")) {
-    const sobe = parseFloat(getComputedStyle(diferenciais).marginTop) * -1 || vh * 0.45;
-    const p = Math.min(Math.max(y / (vh * 0.85), 0), 1);
-    const e = p * p * (3 - 2 * p);
-    const r0 = Math.max(vw * 0.62, 300);
-    const r1 = Math.hypot(vw, vh) * 3;
-    const raio = r0 + (r1 - r0) * Math.pow(e, 2.2);
-    const alto = (1 - e) * sobe;            // onde fica o topo do arco, dentro da parte
-    diferenciais.style.setProperty("--raio", `${raio}px`);
-    diferenciais.style.setProperty("--cy", `${alto + raio}px`);
-    diferenciais.classList.toggle("is-aberta", p >= 1);
-
-    // a frase curva acompanha o topo do arco e some à medida que ele cresce
-    const largura = Math.max((r0 - 46) * 1000 / 420, 360);
-    const s = largura / 1000;
-    arco.style.width = `${largura}px`;
-    arco.style.height = `${220 * s}px`;
-    arco.style.top = `${alto + 64 - 50 * s}px`;
-    arcoTexto.style.fontSize = `${(vw < 700 ? 15 : 21) / s}px`;
-    arco.style.opacity = Math.max(0, 1 - e * 1.5).toFixed(3);
-  }
-}
-
-function pedirQuadro() {
-  if (!pedido) { pedido = true; requestAnimationFrame(aoRolar); }
-}
-aoRolar();
-window.addEventListener("scroll", pedirQuadro, { passive: true });
-window.addEventListener("resize", pedirQuadro);
-
-/* =========================================================
-   Galeria: o traçado que desenha a torre, as nuvens que se
-   abrem sobre a foto, e as fotos que se movem na moldura.
-   ========================================================= */
-const progressoDoPalco = (el) => {
-  const r = el.getBoundingClientRect();
-  return limitar(-r.top / Math.max(1, r.height - window.innerHeight));
-};
-
-/* ---------- o traçado ---------- */
 const tracado = document.getElementById("tracado");
+const ceu = document.getElementById("ceu");
+const ceuNuvens = document.getElementById("ceu-nuvens");
+const ceuImagem = document.getElementById("ceu-imagem");
+const ceuTexto = document.getElementById("ceu-texto");
+const ceuPalco = ceu.querySelector(".ceu__palco");
+const fotoContato = document.getElementById("contato-foto");
+const fotoContatoImg = fotoContato.querySelector("img");
+const legendaContato = fotoContato.querySelector(".contato__legenda");
+const fotosEmMovimento = [...document.querySelectorAll(".cartao__foto img, .mosaico img")];
+
+// o domo: um círculo liso que sobe e cresce (só escala, sem recorte)
+const domo = document.createElement("div");
+domo.className = "diferenciais__domo";
+diferenciais.prepend(domo);
+if (!menosMovimento) raiz.classList.add("arco-ativo");
+
+/* ---------- o traçado: os 24 andares, de baixo para cima ---------- */
 const andares = tracado.querySelector(".torre__andares");
-// os 24 andares, desenhados de baixo para cima, como a obra sobe
 for (let i = 0; i < 24; i++) {
   const y = (418 - (i + 1) * (272 / 24)).toFixed(1);
   const de = 0.6 + i * 0.011;
@@ -298,85 +265,146 @@ for (let i = 0; i < 24; i++) {
   andares.appendChild(linha);
 }
 const rota = tracado.querySelector(".traco--rota");
-const tracosDaTorre = [...tracado.querySelectorAll(".torre .traco")];
-const pontos = [...tracado.querySelectorAll(".ponto")];
-
-// no celular, o desenho se aproxima da torre para ela não ficar miúda
+const tracosDaTorre = [...tracado.querySelectorAll(".torre .traco")].map((t) => ({ el: t, de: +t.dataset.de, ate: +t.dataset.ate, ultimo: -1 }));
+const pontos = [...tracado.querySelectorAll(".ponto")].map((el) => ({ el, em: +el.dataset.em, aceso: false }));
 const desenho = tracado.querySelector(".tracado__desenho");
-let enquadramento = "";
-function enquadrarTracado() {
-  const novo = window.innerWidth < 700 ? "500 70 440 470" : "0 60 1440 480";
-  if (novo !== enquadramento) { desenho.setAttribute("viewBox", novo); enquadramento = novo; }
+
+/* ---------- medidas guardadas ---------- */
+const M = {};
+function medir() {
+  const y = window.scrollY;
+  const topoDe = (el) => el.getBoundingClientRect().top + y;
+  M.vw = window.innerWidth;
+  M.vh = window.innerHeight;
+  M.total = Math.max(1, document.documentElement.scrollHeight - M.vh);
+
+  desenho.setAttribute("viewBox", M.vw < 700 ? "500 70 440 470" : "0 60 1440 480");
+
+  // domo e frase curva
+  M.sobe = raiz.classList.contains("arco-ativo") ? -parseFloat(getComputedStyle(diferenciais).marginTop) || 0 : 0;
+  M.r0 = Math.max(M.vw * 0.62, 300);
+  M.r1 = Math.hypot(M.vw, M.vh) * 3;
+  domo.style.width = domo.style.height = `${2 * M.r0}px`;
+  domo.style.marginLeft = `${-M.r0}px`;
+  domo.style.top = `${M.sobe}px`;
+  // abaixo do centro do círculo a parte é sempre off-white; acima, só o domo pinta
+  diferenciais.style.setProperty("--corte", `${M.sobe + M.r0}px`);
+  M.arcoLargura = Math.max((M.r0 - 46) * 1000 / 420, 360);
+  M.arcoS = M.arcoLargura / 1000;
+  arco.style.width = `${M.arcoLargura}px`;
+  arco.style.height = `${220 * M.arcoS}px`;
+  arcoTexto.style.fontSize = `${(M.vw < 700 ? 15 : 21) / M.arcoS}px`;
+
+  M.tracado = { top: topoDe(tracado), h: tracado.offsetHeight };
+  M.ceu = { top: topoDe(ceu), h: ceu.offsetHeight };
+  M.contato = { top: topoDe(fotoContato), h: fotoContato.offsetHeight };
+  M.contatoLargura = M.vw > 700 ? Math.min(1065, M.vw * 0.74) : M.vw - 32;
+  M.fotos = fotosEmMovimento.map((img) => ({ img, top: topoDe(img.parentElement), h: img.parentElement.offsetHeight }));
+  ultimoY = -1;
 }
 
-function desenharTracado() {
-  enquadrarTracado();
-  const p = menosMovimento ? 1 : progressoDoPalco(tracado);
-  rota.style.setProperty("--falta", (1 - suave(0, 0.8, p)).toFixed(4));
-  tracosDaTorre.forEach((t) => {
-    const de = +t.dataset.de, ate = +t.dataset.ate;
-    t.style.setProperty("--falta", (1 - limitar((p - de) / (ate - de))).toFixed(4));
-  });
-  pontos.forEach((pt) => pt.classList.toggle("is-aceso", p >= +pt.dataset.em));
-}
+const curso = (m, y) => limitar((y - m.top) / Math.max(1, m.h - M.vh));
+const perto = (m, y) => y > m.top - M.vh * 1.2 && y < m.top + m.h + M.vh * 0.2;
 
-/* ---------- as nuvens ---------- */
-const ceu = document.getElementById("ceu");
-const ceuNuvens = document.getElementById("ceu-nuvens");
-const ceuImagem = document.getElementById("ceu-imagem");
-const ceuTexto = document.getElementById("ceu-texto");
+/* ---------- o quadro ---------- */
+let ultimoY = -1;
+let rolado = null;
 let abrirNuvensDoCeu = null;
 
-function abrirCeu() {
-  const r = ceu.getBoundingClientRect();
-  if (r.bottom < -50 || r.top > window.innerHeight * 1.5) return; // longe da tela: não gasta nada
-  if (!abrirNuvensDoCeu) abrirNuvensDoCeu = criarNuvens(ceuNuvens);
-  const p = menosMovimento ? 1 : progressoDoPalco(ceu);
-  abrirNuvensDoCeu(p);
-  ceuImagem.style.setProperty("--zoom", (1.3 - 0.3 * suave(0.08, 0.95, p)).toFixed(4));
-  ceuTexto.style.setProperty("--texto", suave(0.6, 0.82, p).toFixed(3));
-  ceu.querySelector(".ceu__palco").style.setProperty("--fundo", suave(0.78, 1, p).toFixed(3));
-}
+function quadro() {
+  pedido = false;
+  const y = window.scrollY;
+  if (y === ultimoY) return;
+  ultimoY = y;
+  const { vw, vh } = M;
 
-/* ---------- as fotos se movem dentro da moldura ---------- */
-const fotosEmMovimento = [...document.querySelectorAll(".cartao__foto img, .mosaico img, .contato__imagem img")];
-function moverFotos() {
+  const r = y > 40;
+  if (r !== rolado) { topo.classList.toggle("is-rolado", r); rolado = r; }
+  trilho.style.transform = `scaleY(${(y / M.total).toFixed(4)})`;
+
   if (menosMovimento) return;
-  const vh = window.innerHeight;
-  for (const img of fotosEmMovimento) {
-    const r = img.parentElement.getBoundingClientRect();
-    if (r.bottom < -100 || r.top > vh + 100) continue;
-    const rel = (r.top + r.height / 2 - vh / 2) / vh; // -1 em cima, 1 embaixo
-    img.style.setProperty("--py", `${(-rel * 6).toFixed(2)}%`);
+
+  // abertura: a foto anda mais devagar que a página; o texto sobe e se apaga
+  if (y < vh * 1.3) {
+    const saida = Math.min(y / (vh * 0.6), 1);
+    foto.style.transform = `translate3d(0, ${(y * 0.35).toFixed(1)}px, 0)`;
+    conteudo.style.transform = `translate3d(0, ${(-y * 0.18).toFixed(1)}px, 0)`;
+    conteudo.style.opacity = (1 - saida).toFixed(3);
+    elevacao.style.opacity = (1 - saida).toFixed(3);
+
+    // o domo nasce escondido na base da foto, sobe e cresce até cobrir tudo
+    const p = Math.min(Math.max(y / (vh * 0.85), 0), 1);
+    const e = p * p * (3 - 2 * p);
+    const raio = M.r0 + (M.r1 - M.r0) * Math.pow(e, 2.2);
+    const alto = (1 - e) * M.sobe;
+    domo.style.transform = `translate3d(0, ${(alto - M.sobe).toFixed(1)}px, 0) scale(${(raio / M.r0).toFixed(4)})`;
+    arco.style.transform = `translate3d(-50%, ${(alto + 64 - 50 * M.arcoS).toFixed(1)}px, 0)`;
+    arco.style.opacity = Math.max(0, 1 - e * 1.5).toFixed(3);
+    miolo.style.opacity = suave(0.45, 0.8, p).toFixed(3);
+  } else if (miolo.style.opacity !== "1") {
+    miolo.style.opacity = "1";
+  }
+
+  // o traçado: a linha corre e a torre sobe andar por andar
+  if (perto(M.tracado, y)) {
+    const p = curso(M.tracado, y);
+    rota.style.strokeDashoffset = (1 - suave(0, 0.8, p)).toFixed(4);
+    for (const t of tracosDaTorre) {
+      const f = (1 - limitar((p - t.de) / (t.ate - t.de))).toFixed(4);
+      if (f !== t.ultimo) { t.el.style.strokeDashoffset = f; t.ultimo = f; }
+    }
+    for (const pt of pontos) {
+      const aceso = p >= pt.em;
+      if (aceso !== pt.aceso) { pt.el.classList.toggle("is-aceso", aceso); pt.aceso = aceso; }
+    }
+  }
+
+  // o céu: as nuvens se abrem sobre a foto
+  if (perto(M.ceu, y)) {
+    if (!abrirNuvensDoCeu) abrirNuvensDoCeu = criarNuvens(ceuNuvens);
+    const p = curso(M.ceu, y);
+    abrirNuvensDoCeu(p);
+    ceuImagem.style.transform = `scale(${(1.3 - 0.3 * suave(0.08, 0.95, p)).toFixed(4)})`;
+    const t = suave(0.6, 0.82, p);
+    ceuTexto.style.opacity = t.toFixed(3);
+    ceuTexto.style.transform = `translate3d(0, ${((1 - t) * 30).toFixed(1)}px, 0)`;
+    ceuPalco.style.setProperty("--fundo", suave(0.78, 1, p).toFixed(3));
+  }
+
+  // as fotos se movem dentro da moldura
+  for (const f of M.fotos) {
+    if (f.top + f.h < y - 100 || f.top > y + vh + 100) continue;
+    const rel = (f.top + f.h / 2 - y - vh / 2) / vh;
+    f.img.style.translate = `0 ${(-rel * 6).toFixed(2)}%`;
+  }
+
+  // contato: a foto entra larga e se recolhe numa moldura (escala, sem recorte)
+  const topoContato = M.contato.top - y;
+  if (topoContato < vh && topoContato + M.contato.h > 0) {
+    const p = suave(0, 1, (vh - topoContato) / (vh * 0.95));
+    const k = 1 - (1 - M.contatoLargura / vw) * p;
+    fotoContato.style.transform = `scaleX(${k.toFixed(4)})`;
+    fotoContatoImg.style.transform = `scaleX(${(1 / k).toFixed(4)}) scale(${(1.18 - 0.18 * p).toFixed(4)})`;
+    legendaContato.style.transform = `scaleX(${(1 / k).toFixed(4)})`;
   }
 }
 
-/* ---------- contato: a foto entra larga e se recolhe numa moldura ---------- */
-const fotoContato = document.getElementById("contato-foto");
-function recolherFotoContato() {
-  const vw = window.innerWidth, vh = window.innerHeight;
-  const r = fotoContato.getBoundingClientRect();
-  if (r.bottom < 0 || r.top > vh) return;
-  const p = menosMovimento ? 1 : suave(0, 1, (vh - r.top) / (vh * 0.95));
-  const largura = vw > 700 ? Math.min(1065, vw * 0.74) : vw - 32;
-  const lado = ((vw - largura) / 2) * p;
-  fotoContato.style.setProperty("--lado", lado.toFixed(1) + "px");
-  fotoContato.style.setProperty("--canto", (6 * p).toFixed(1) + "px");
-  fotoContato.style.setProperty("--zoom-contato", (1.18 - 0.18 * p).toFixed(4));
-}
+let pedido = false;
+function pedirQuadro() { if (!pedido) { pedido = true; requestAnimationFrame(quadro); } }
 
-let pedidoGaleria = false;
-function quadroGaleria() {
-  pedidoGaleria = false;
-  desenharTracado();
-  abrirCeu();
-  moverFotos();
-  recolherFotoContato();
+medir();
+quadro();
+window.addEventListener("scroll", pedirQuadro, { passive: true });
+window.addEventListener("resize", () => { medir(); pedirQuadro(); });
+window.addEventListener("load", () => { medir(); pedirQuadro(); });
+// se a altura da página mudar (fontes, imagens), mede de novo
+if ("ResizeObserver" in window) {
+  let alturaAntes = 0;
+  new ResizeObserver(() => {
+    const a = document.documentElement.scrollHeight;
+    if (a !== alturaAntes) { alturaAntes = a; medir(); pedirQuadro(); }
+  }).observe(document.body);
 }
-const pedirGaleria = () => { if (!pedidoGaleria) { pedidoGaleria = true; requestAnimationFrame(quadroGaleria); } };
-quadroGaleria();
-window.addEventListener("scroll", pedirGaleria, { passive: true });
-window.addEventListener("resize", pedirGaleria);
 
 /* ---------- imagens que se revelam ao entrar na tela ---------- */
 if (!menosMovimento && "IntersectionObserver" in window) {
