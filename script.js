@@ -274,23 +274,205 @@ aoRolar();
 window.addEventListener("scroll", pedirQuadro, { passive: true });
 window.addEventListener("resize", pedirQuadro);
 
+/* =========================================================
+   Galeria: o traçado que desenha a torre, as nuvens que se
+   abrem sobre a foto, e as fotos que se movem na moldura.
+   ========================================================= */
+const limitar = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+const suave = (a, b, v) => { const t = limitar((v - a) / (b - a)); return t * t * (3 - 2 * t); };
+const progressoDoPalco = (el) => {
+  const r = el.getBoundingClientRect();
+  return limitar(-r.top / Math.max(1, r.height - window.innerHeight));
+};
+
+/* ---------- o traçado ---------- */
+const tracado = document.getElementById("tracado");
+const andares = tracado.querySelector(".torre__andares");
+// os 24 andares, desenhados de baixo para cima, como a obra sobe
+for (let i = 0; i < 24; i++) {
+  const y = (418 - (i + 1) * (272 / 24)).toFixed(1);
+  const de = 0.6 + i * 0.011;
+  const linha = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  linha.setAttribute("class", "traco traco--fino");
+  linha.setAttribute("pathLength", "1");
+  linha.setAttribute("d", `M668 ${y} H772`);
+  linha.dataset.de = de.toFixed(3);
+  linha.dataset.ate = (de + 0.03).toFixed(3);
+  andares.appendChild(linha);
+}
+const rota = tracado.querySelector(".traco--rota");
+const tracosDaTorre = [...tracado.querySelectorAll(".torre .traco")];
+const pontos = [...tracado.querySelectorAll(".ponto")];
+
+// no celular, o desenho se aproxima da torre para ela não ficar miúda
+const desenho = tracado.querySelector(".tracado__desenho");
+let enquadramento = "";
+function enquadrarTracado() {
+  const novo = window.innerWidth < 700 ? "500 70 440 450" : "0 0 1440 560";
+  if (novo !== enquadramento) { desenho.setAttribute("viewBox", novo); enquadramento = novo; }
+}
+
+function desenharTracado() {
+  enquadrarTracado();
+  const p = menosMovimento ? 1 : progressoDoPalco(tracado);
+  rota.style.setProperty("--falta", (1 - suave(0, 0.8, p)).toFixed(4));
+  tracosDaTorre.forEach((t) => {
+    const de = +t.dataset.de, ate = +t.dataset.ate;
+    t.style.setProperty("--falta", (1 - limitar((p - de) / (ate - de))).toFixed(4));
+  });
+  pontos.forEach((pt) => pt.classList.toggle("is-aceso", p >= +pt.dataset.em));
+}
+
+/* ---------- as nuvens ---------- */
+const ceu = document.getElementById("ceu");
+const ceuNuvens = document.getElementById("ceu-nuvens");
+const ceuImagem = document.getElementById("ceu-imagem");
+const ceuTexto = document.getElementById("ceu-texto");
+let nuvensDoCeu = null;
+let baseDoCeu = null;
+
+// desenha uma nuvem de verdade: ruído em camadas, base mais achatada e sombra embaixo
+function texturaDeNuvem(semente) {
+  const w = 160, h = 80;
+  const peq = document.createElement("canvas");
+  peq.width = w; peq.height = h;
+  const g = peq.getContext("2d");
+  const img = g.createImageData(w, h);
+  const ruido = new Float32Array(w * h);
+  let aleatorio = semente * 9973 + 1;
+  const rnd = () => { aleatorio = (aleatorio * 16807) % 2147483647; return aleatorio / 2147483647; };
+  for (const [celula, peso] of [[20, 0.55], [9, 0.28], [4, 0.17]]) {
+    const gw = Math.ceil(w / celula) + 2, gh = Math.ceil(h / celula) + 2;
+    const grade = Array.from({ length: gw * gh }, rnd);
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      const gx = x / celula, gy = y / celula, x0 = Math.floor(gx), y0 = Math.floor(gy);
+      const fx = gx - x0, fy = gy - y0, sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy);
+      const a = grade[y0 * gw + x0], b = grade[y0 * gw + x0 + 1], c = grade[(y0 + 1) * gw + x0], d = grade[(y0 + 1) * gw + x0 + 1];
+      ruido[y * w + x] += peso * (a + (b - a) * sx + (c - a + (a - b + d - c) * sx) * sy);
+    }
+  }
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const dx = (x / w - 0.5) / 0.5, dy = (y / h - 0.58) / (y / h > 0.58 ? 0.32 : 0.6);
+    const forma = 1 - (dx * dx + dy * dy);
+    const dens = ruido[y * w + x] * 0.95 + forma * 0.75 - 0.62;
+    const a = limitar(dens / 0.3);
+    const sombra = limitar((y / h - 0.3) * 1.1) * 0.22;
+    const i = (y * w + x) * 4;
+    img.data[i] = 255 - sombra * 190;
+    img.data[i + 1] = 255 - sombra * 140;
+    img.data[i + 2] = 255 - sombra * 100;
+    img.data[i + 3] = a * a * (3 - 2 * a) * 255;
+  }
+  g.putImageData(img, 0, 0);
+  const grande = document.createElement("canvas");
+  grande.width = 640; grande.height = 320;
+  const gg = grande.getContext("2d");
+  gg.imageSmoothingQuality = "high";
+  gg.drawImage(peq, 0, 0, 640, 320);
+  return grande.toDataURL("image/png");
+}
+
+function montarNuvens() {
+  const texturas = [1, 2, 3, 4, 5].map(texturaDeNuvem);
+  baseDoCeu = document.createElement("div");
+  baseDoCeu.className = "ceu__base";
+  ceuNuvens.appendChild(baseDoCeu);
+  nuvensDoCeu = [];
+  const linhas = 4, colunas = 4;
+  for (let l = 0; l < linhas; l++) for (let c = 0; c < colunas; c++) {
+    for (let k = 0; k < 2; k++) {
+      const el = document.createElement("div");
+      el.className = "nuvem";
+      el.style.backgroundImage = `url(${texturas[(l * colunas + c + k) % texturas.length]})`;
+      ceuNuvens.appendChild(el);
+      nuvensDoCeu.push({
+        el,
+        x: (c + 0.5) / colunas + (Math.random() - 0.5) * 0.18,
+        y: (l + 0.5) / linhas + (Math.random() - 0.5) * 0.2,
+        tamanho: 0.62 + Math.random() * 0.4,
+        velocidade: 0.75 + Math.random() * 0.6,
+        espelho: Math.random() < 0.5 ? -1 : 1,
+      });
+    }
+  }
+}
+
+function abrirCeu() {
+  const r = ceu.getBoundingClientRect();
+  if (r.bottom < -50 || r.top > window.innerHeight * 1.5) return; // longe da tela: não gasta nada
+  if (!nuvensDoCeu) montarNuvens();
+  const p = menosMovimento ? 1 : progressoDoPalco(ceu);
+  const W = window.innerWidth, H = window.innerHeight;
+  const abre = suave(0.06, 0.78, p);
+  baseDoCeu.style.opacity = (1 - suave(0, 0.3, p)).toFixed(3);
+  const alcance = Math.max(W, H) * 1.05;
+  for (const n of nuvensDoCeu) {
+    const w = Math.max(W, 700) * n.tamanho, h = w / 2;
+    const cx = n.x * W, cy = n.y * H;
+    const dx = n.x - 0.5, dy = (n.y - 0.48) * 0.8;
+    const d = Math.hypot(dx, dy) || 0.01;
+    const anda = Math.pow(abre, 1.6) * alcance * n.velocidade;
+    const escala = 1 + abre * 0.9;
+    n.el.style.width = `${w}px`;
+    n.el.style.height = `${h}px`;
+    n.el.style.transform = `translate3d(${cx - w / 2 + (dx / d) * anda}px, ${cy - h / 2 + (dy / d) * anda - abre * 60}px, 0) scale(${escala * n.espelho}, ${escala})`;
+    n.el.style.opacity = (1 - Math.pow(abre, 2.2)).toFixed(3);
+  }
+  ceuImagem.style.setProperty("--zoom", (1.3 - 0.3 * suave(0.08, 0.95, p)).toFixed(4));
+  ceuTexto.style.setProperty("--texto", suave(0.6, 0.82, p).toFixed(3));
+  ceu.querySelector(".ceu__palco").style.setProperty("--fundo", suave(0.78, 1, p).toFixed(3));
+}
+
+/* ---------- as fotos se movem dentro da moldura ---------- */
+const fotosEmMovimento = [...document.querySelectorAll(".cartao__foto img, .mosaico img, .contato__imagem img")];
+function moverFotos() {
+  if (menosMovimento) return;
+  const vh = window.innerHeight;
+  for (const img of fotosEmMovimento) {
+    const r = img.parentElement.getBoundingClientRect();
+    if (r.bottom < -100 || r.top > vh + 100) continue;
+    const rel = (r.top + r.height / 2 - vh / 2) / vh; // -1 em cima, 1 embaixo
+    img.style.setProperty("--py", `${(-rel * 6).toFixed(2)}%`);
+  }
+}
+
+let pedidoGaleria = false;
+function quadroGaleria() {
+  pedidoGaleria = false;
+  desenharTracado();
+  abrirCeu();
+  moverFotos();
+}
+const pedirGaleria = () => { if (!pedidoGaleria) { pedidoGaleria = true; requestAnimationFrame(quadroGaleria); } };
+quadroGaleria();
+window.addEventListener("scroll", pedirGaleria, { passive: true });
+window.addEventListener("resize", pedirGaleria);
+
 /* ---------- imagens que se revelam ao entrar na tela ---------- */
 if (!menosMovimento && "IntersectionObserver" in window) {
   raiz.classList.add("revela-ativo");
+  // quem tem o recorte na própria moldura é vigiado pelo bloco em volta,
+  // senão o navegador acha que ele nunca entra na tela
+  const vigiado = new Map();
   const observador = new IntersectionObserver((entradas) => {
     entradas.forEach((ent) => {
       if (!ent.isIntersecting) return;
-      const irmaos = [...ent.target.parentElement.children];
-      const ordem = Math.max(0, irmaos.indexOf(ent.target)) % 4;
-      ent.target.style.transitionDelay = `${ordem * 90}ms`;
-      ent.target.querySelectorAll("img, .cartao__foto, button").forEach((el) => {
+      const alvo = vigiado.get(ent.target) || ent.target;
+      const irmaos = [...alvo.parentElement.children];
+      const ordem = Math.max(0, irmaos.indexOf(alvo)) % 4;
+      alvo.style.transitionDelay = `${ordem * 90}ms`;
+      alvo.querySelectorAll("img, .cartao__foto, button").forEach((el) => {
         el.style.transitionDelay = `${ordem * 90}ms`;
       });
-      ent.target.classList.add("visivel");
+      alvo.classList.add("visivel");
       observador.unobserve(ent.target);
     });
   }, { rootMargin: "0px 0px -12% 0px", threshold: 0.08 });
-  document.querySelectorAll(".revela").forEach((el) => observador.observe(el));
+  document.querySelectorAll(".revela").forEach((el) => {
+    const quem = el.matches(".contato__imagem") ? el.parentElement : el;
+    if (quem !== el) vigiado.set(quem, el);
+    observador.observe(quem);
+  });
 }
 
 /* ---------- menu do celular ---------- */

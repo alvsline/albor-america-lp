@@ -135,7 +135,7 @@
           </li>
           <li class="cartao revela">
             <div class="cartao__foto"><img src="img/albor_piscina_01.jpg" width="900" height="675" loading="lazy"
-                 alt="Piscina lounge ao entardecer, com espreguiçadeiras na borda e o horizonte da cidade atrás do guarda-corpo de vidro."></div>
+                 alt="Piscina lounge num dia de céu azul, com espreguiçadeiras na borda e a cidade atrás do guarda-corpo de vidro."></div>
             <div class="cartao__linha">
               <span class="cartao__andar">2º sobressolo</span>
               <svg class="cartao__icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10c2 0 2.2-1.5 4.5-1.5S10 10 12 10s2.2-1.5 4.5-1.5S19 10 21 10M3 15c2 0 2.2-1.5 4.5-1.5S10 15 12 15s2.2-1.5 4.5-1.5S19 15 21 15"/></svg>
@@ -173,10 +173,59 @@
 
     <!-- 4. Galeria -->
     <section class="galeria" id="galeria" aria-labelledby="galeria-titulo">
-      <div class="galeria__cabeca">
-        <h2 id="galeria-titulo">Por dentro do Albor</h2>
-        <p>Toque numa imagem para ver em tela cheia</p>
+
+      <!-- o traçado: a linha atravessa o bairro e desenha a torre, do térreo ao rooftop -->
+      <div class="tracado" id="tracado">
+        <div class="tracado__palco">
+          <p class="tracado__titulo">No Jardim América, Zona Sul de São José dos Campos</p>
+          <svg class="tracado__desenho" viewBox="0 0 1440 560" role="img"
+               aria-label="Desenho de uma linha que passa pela Linha Verde, pela Avenida Bacabal, chega à torre do Albor América e segue até o Shopping Jardim Oriente, a 4 minutos a pé, e ao plantão de vendas na Rua Andorra.">
+            <!-- o caminho -->
+            <path class="traco traco--rota" pathLength="1" d="M30 505 C 110 478, 160 452, 200 446 S 330 506, 430 486 S 600 476, 720 482 S 900 440, 1010 458 S 1160 430, 1240 442 S 1360 474, 1415 458"/>
+            <!-- os pontos -->
+            <g class="ponto" data-em="0.12"><circle cx="200" cy="446" r="5"/><text x="200" y="412" class="ponto__nome">Linha Verde</text></g>
+            <g class="ponto" data-em="0.26"><circle cx="430" cy="486" r="5"/><text x="430" y="452" class="ponto__nome">Avenida Bacabal</text></g>
+            <g class="ponto" data-em="0.62"><circle cx="1010" cy="458" r="5"/><text x="1010" y="404" class="ponto__nome">Shopping Jardim Oriente</text><text x="1010" y="428" class="ponto__info">4 min a pé</text></g>
+            <g class="ponto" data-em="0.74"><circle cx="1240" cy="442" r="5"/><text x="1240" y="388" class="ponto__nome">Plantão de vendas</text><text x="1240" y="412" class="ponto__info">Rua Andorra, 452</text></g>
+
+            <!-- a torre, desenhada na ordem da obra -->
+            <g class="torre">
+              <path class="traco" data-de="0.36" data-ate="0.46" pathLength="1" d="M596 482 V 418 H 844 V 482"/>
+              <path class="traco" data-de="0.42" data-ate="0.5" pathLength="1" d="M596 450 H 844"/>
+              <path class="traco" data-de="0.46" data-ate="0.52" pathLength="1" d="M632 418 V 410 H 712 V 418 M 724 418 V 410 H 760 V 418"/>
+              <path class="traco" data-de="0.48" data-ate="0.62" pathLength="1" d="M668 418 V 128 H 772 V 418"/>
+              <path class="traco traco--fino" data-de="0.52" data-ate="0.66" pathLength="1" d="M688 418 V 146 M 752 418 V 146"/>
+              <g class="torre__andares"></g>
+              <path class="traco" data-de="0.86" data-ate="0.93" pathLength="1" d="M660 128 H 780 M 664 128 V 110 H 776 V 128 M 680 110 V 98 H 760 V 110"/>
+              <path class="traco traco--fino" data-de="0.9" data-ate="0.96" pathLength="1" d="M676 110 C 676 102, 686 102, 686 110 M 754 110 C 754 102, 764 102, 764 110"/>
+              <path class="traco traco--fino" data-de="0.44" data-ate="0.54" pathLength="1" d="M606 418 C 600 404, 614 396, 618 406 C 624 396, 636 404, 628 418 M 818 418 C 812 404, 826 396, 830 406 C 836 396, 848 404, 840 418"/>
+            </g>
+            <g class="ponto ponto--torre" data-em="0.95"><text x="800" y="104" class="ponto__nome">Rooftop</text><text x="800" y="128" class="ponto__info">24º pavimento</text></g>
+            <g class="ponto ponto--torre" data-em="0.5"><text x="860" y="472" class="ponto__info">Térreo</text></g>
+          </svg>
+          <ul class="tracado__lista" aria-hidden="true">
+            <li><strong>Linha Verde</strong></li>
+            <li><strong>Avenida Bacabal</strong></li>
+            <li><strong>Shopping Jardim Oriente</strong> 4 min a pé</li>
+            <li><strong>Plantão de vendas</strong> Rua Andorra, 452</li>
+          </ul>
+        </div>
       </div>
+
+      <!-- o céu: as nuvens se abrem e a galeria aparece -->
+      <div class="ceu" id="ceu">
+        <div class="ceu__palco">
+          <img class="ceu__imagem" id="ceu-imagem" src="img/albor_ceu_piscina_01.jpg" width="1200" height="675" loading="lazy"
+               alt="Piscina lounge no 2º sobressolo ao entardecer, com o sol se pondo sobre a cidade e espreguiçadeiras ao fundo.">
+          <div class="ceu__nuvens" id="ceu-nuvens" aria-hidden="true"></div>
+          <div class="ceu__texto" id="ceu-texto">
+            <h2 id="galeria-titulo">Por dentro do Albor</h2>
+          </div>
+        </div>
+      </div>
+
+      <div class="galeria__corpo">
+      <p class="galeria__dica">Toque numa imagem para ver em tela cheia</p>
 
       <ul class="mosaico">
         <li class="mosaico__item mosaico__item--maior revela"><button type="button"><img src="img/albor_galeria_club_gourmet_01.jpg" width="1200" height="783" loading="lazy" alt="Albor Club ao entardecer: piscina iluminada, espreguiçadeiras e o espaço gourmet coberto ao fundo, com a cidade no horizonte."></button></li>
@@ -192,6 +241,7 @@
         <li class="mosaico__item revela"><button type="button"><img src="img/albor_galeria_parquinho_01.jpg" width="1200" height="778" loading="lazy" alt="Parquinho com casinha de madeira, escorregador e escada de corda sobre a grama, cercado por plantas."></button></li>
         <li class="mosaico__item revela"><button type="button"><img src="img/albor_galeria_tipo1_03.jpg" width="1200" height="927" loading="lazy" alt="Suíte do tipo 1, com cama de casal, almofadas xadrez e luminária de mesa."></button></li>
       </ul>
+      </div>
     </section>
 
     <!-- 5. Contato -->
